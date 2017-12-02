@@ -165,6 +165,7 @@ int main(int argc, char* argv[])
     std::cout << "enter a 'q' to exit" << std::endl << std::endl;
     bool exit_flag = false;
     char line[chat_message::max_body_length + 1] = { 0 };
+    
     while (!exit_flag && 
             std::cin.getline(line, chat_message::max_body_length + 1))
     {
@@ -179,6 +180,7 @@ int main(int argc, char* argv[])
           msg = format_reply ( line );
           msg.encode_header();
           c.write(msg);
+          printf("%s", msg.data());
           memset ( line, '\0', sizeof ( line ) );
           sleep (1); // helps with scripted tests
        }
