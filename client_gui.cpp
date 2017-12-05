@@ -12,6 +12,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Output.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Text_Display.H>
 #include <string>
 
@@ -24,7 +25,13 @@ Fl_Text_Buffer *buff = new Fl_Text_Buffer ();
 Fl_Text_Display *disp = new Fl_Text_Display (190,50,400,400,"chat");
 
 Fl_Text_Buffer *buff1 = new Fl_Text_Buffer ();
-Fl_Text_Display *disp1 = new Fl_Text_Display (2,50,180,400,"Chatroom members");
+Fl_Text_Display *disp1 = new Fl_Text_Display (2,50,180,250,"Chatroom members");
+
+Fl_Return_Button *b_nick = new Fl_Return_Button(10, 330, 170, 25, "NICK");
+Fl_Return_Button *b_change_room = new Fl_Return_Button(10, 365, 170, 25, "CHANGECHATROOM");
+Fl_Return_Button *b_req_room = new Fl_Return_Button(10, 400, 170, 25, "REQCHATROOM");
+Fl_Return_Button *b_name_room = new Fl_Return_Button(10, 435, 170, 25, "NAMECHATROOM");
+
 void clearmembers ();
 static void cb_clear ();
 
@@ -275,7 +282,7 @@ static void cb_input1 (Fl_Input*, void * userdata)
     break;
   }
   
-  msg = format_reply (temp);
+  //msg = format_reply (temp);
   msg.encode_header();
   std::cout << "sent " << msg.body() << std::endl;
   c->write(msg);
@@ -312,23 +319,23 @@ void rqUUID(void*){
   c->write(command);
 }
 
-void function_1(void*){
+void function_1(Fl_Widget* w, void* p){
   function = 1;
 }
 
-void function_2(void*){
+void function_2(Fl_Widget* w, void* p){
   function = 2;
 }
 
-void function_3(void*){
+void function_3(Fl_Widget* w, void* p){
   function = 3;
 }
 
-void function_4(void*){
+void function_4(Fl_Widget* w, void* p){
   function = 4;
 }
 
-void function_5(void*){
+void function_5(Fl_Widget* w, void* p){
   function = 5;
 }
 
@@ -344,6 +351,10 @@ int main ( int argc, char **argv)
 
   input1.callback ((Fl_Callback*)cb_input1,( void *) "Enter next:");
   input1.when ( FL_WHEN_ENTER_KEY );
+  b_nick -> callback((Fl_Callback *) function_1, 0);
+  b_change_room -> callback((Fl_Callback *) function_2, 0);
+  b_req_room -> callback((Fl_Callback *) function_3, 0);
+  b_name_room -> callback((Fl_Callback *) function_4, 0);
   quit.callback (( Fl_Callback*) cb_quit );
   clear.callback (( Fl_Callback*) cb_clear );
   win.add (quit);
