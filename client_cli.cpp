@@ -34,9 +34,9 @@ class chat_client
 {
 public:
   chat_client(boost::asio::io_service& io_service,
-      tcp::resolver::iterator endpoint_iterator)
+      tcp::resolver::iterator endpoint_iterator,void (*data_recv) (chat_message cm))
     : io_service_(io_service),
-      socket_(io_service)
+      socket_(io_service),data_recv_ ( data_recv )
   {
     do_connect(endpoint_iterator);
   }
@@ -98,9 +98,10 @@ private:
         {
           if (!ec)
           {
-            std::cout << "Recieved: [";
+           /* std::cout << "Recieved: [";
             std::cout.write(read_msg_.body(), read_msg_.body_length());
-            std::cout << "]\n";
+            std::cout << "]\n";*/
+            data_recv_ ( read_msg_ );
             do_read_header();
           }
           else
@@ -133,12 +134,13 @@ private:
   }
 
 private:
-  boost::asio::io_service& io_service_;
+ boost::asio::io_service& io_service_;
   tcp::socket socket_;
+  void (*data_recv_) (chat_message cm);
   chat_message read_msg_;
   chat_message_queue write_msgs_;
 };
-
+#ifdef XXX
 int main(int argc, char* argv[])
 {
   try
@@ -157,7 +159,7 @@ int main(int argc, char* argv[])
 
     std::thread t([&io_service](){ io_service.run(); });
 
-    std::cout << "This program is used for stimulating the " 
+    std::cout << "This program is used for stimulating the "
               << "UberChat server." << std::endl;
     std::cout << "It is strictly for testing and software integration" << std::endl;
     std::cout << "enter the command and any arguments." << std::endl;
@@ -165,8 +167,7 @@ int main(int argc, char* argv[])
     std::cout << "enter a 'q' to exit" << std::endl << std::endl;
     bool exit_flag = false;
     char line[chat_message::max_body_length + 1] = { 0 };
-    
-    while (!exit_flag && 
+    while (!exit_flag &&
             std::cin.getline(line, chat_message::max_body_length + 1))
     {
        if ( strlen(line)==1 && line[0]=='q' )
@@ -180,7 +181,6 @@ int main(int argc, char* argv[])
           msg = format_reply ( line );
           msg.encode_header();
           c.write(msg);
-          printf("%s", msg.data());
           memset ( line, '\0', sizeof ( line ) );
           sleep (1); // helps with scripted tests
        }
@@ -196,4 +196,4 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
+#endif

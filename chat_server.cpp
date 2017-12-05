@@ -43,7 +43,7 @@ typedef std::vector<std::string> chat_history_t;
 //  it is the 'chat database'
 //
 
-struct nick_and_chatroom 
+struct nick_and_chatroom
 {
    std::string nick;
    std::string chatroom;
@@ -79,9 +79,9 @@ public:
      std::cout << "participant () " << UUID << std::endl;
   }
 
-  ~chat_participant() 
+  ~chat_participant()
   {
-     std::cout << "~participant () " << UUID << std::endl;  
+     std::cout << "~participant () " << UUID << std::endl;
   }
 
   virtual void deliver(const chat_message& msg) = 0;
@@ -98,8 +98,8 @@ public:
        bool cksum_ok = parse_command ( cm, &checksum, &time, &command, &payload );
        boost::posix_time::ptime now_time = boost::posix_time::microsec_clock::local_time ();
        boost::posix_time::time_duration dt = now_time - time;
-       std::cout << "     delta time  : " 
-                 << boost::posix_time::to_simple_string ( dt ) 
+       std::cout << "     delta time  : "
+                 << boost::posix_time::to_simple_string ( dt )
                  << std::endl;
 
        char *ignore_cksum = getenv("IGNORE_CHECKSUM");
@@ -110,7 +110,7 @@ public:
             std::cout << "     command is REQCHATROOM" << std::endl;
             chat_message reply;
             std::string results;
-            results = CHATROOM; 
+            results = CHATROOM;
             reply = format_reply ( command + "," + results );
             deliver ( reply );
          }
@@ -120,6 +120,7 @@ public:
             chat_message reply;
             std::string results;
             results = to_string (UUID);
+            std::cout << " answer " <<results<<std::endl;
             reply = format_reply ( command + "," + results );
             deliver ( reply );
          }
@@ -161,11 +162,11 @@ public:
                      found = true;
                   }
               }
-  
+
               if ( found )
               {
                   CHATROOM_MESSAGE_IDX = 0;
-                  CHATROOM = DB.chatrooms[found_idx];    
+                  CHATROOM = DB.chatrooms[found_idx];
                   nick_and_chatroom nc;
                   nc.nick = NICK;
                   nc.chatroom = CHATROOM;
@@ -173,11 +174,11 @@ public:
               }
               else
               {
-                   std::cout << "     could not change chatroom " 
+                   std::cout << "     could not change chatroom "
                              << payload << " was not found" << std::endl;
               }
             }
-            db_lock.unlock (); 
+            db_lock.unlock ();
             results =  CHATROOM;
             reply = format_reply ( command + "," + results );
             deliver ( reply );
@@ -197,7 +198,7 @@ public:
                    results = results + ";";
                 }
                 results = results + DB.chatrooms [ i ];
-            } 
+            }
             db_lock.unlock ();
 
             reply = format_reply ( command + "," + results );
@@ -297,11 +298,26 @@ public:
                     results = results + to_string ( i->first ) + "," + i->second.nick ;
                  }
               }
-            } 
+            }
             db_lock.unlock ();
             reply = format_reply ( command + "," + results );
             deliver ( reply );
          }
+         else if (command == "GETNICK")
+              {
+            chat_message reply;
+            std::string results;
+            db_lock.lock ();
+            {
+                  nick_and_chatroom nc;
+                 nc = DB.uuid_to_nick [ UUID ];
+                 results = nc.nick;
+            }
+                db_lock.unlock ();
+                reply = format_reply ( command + "," + results);
+                deliver ( reply );
+
+              }
          else
          {
             std::cout << command << " is not a valid command" << std::endl;
@@ -395,7 +411,7 @@ private:
             // room_.deliver(read_msg_);
             // temp.  this is an echo
             //deliver(read_msg_);
-            self->process_command ( read_msg_ );
+   self->process_command ( read_msg_ );
             //std::cout << "deliver " <<  self->UUID << "  " << std::endl;
             do_read_header();
           }
