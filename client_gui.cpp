@@ -34,7 +34,7 @@ Fl_Return_Button *b_name_room = new Fl_Return_Button(10, 435, 170, 25, "NAMECHAT
 
 void clearmembers ();
 static void cb_clear ();
-
+void printrequest (std::string payload);
 int function = 0;
 /*Fl_Text_Buffer *buff2 = new Fl_Text_Buffer ();
 Fl_Text_Display *disp2 = new Fl_Text_Display (2,10,100,35);*/
@@ -138,7 +138,7 @@ static void cb_recv ( chat_message cm )
    if (command == "REQUUID"||command == "NICK"||command == "NAMECHATROOM")
     {
       chat_message  msg = format_reply ( "GETNICK");
-      payload = payload + "\n";
+      payload = payload + " \n";
 
       if (buff)
       {
@@ -153,7 +153,7 @@ static void cb_recv ( chat_message cm )
       }
       else if (command == "REQUSERS"){
         setnameid(payload );
-        
+
       }
 
     else if (command == "REQTEXT")
@@ -174,7 +174,7 @@ static void cb_recv ( chat_message cm )
         std::string messageout=content.substr(0,ANS);
         //std::cout<< "REqtext------------->>>>>>>>>>>>"<< messageout<<std::endl;
         content.erase(0,ANS+1);
-        messageout = "["+nick+"]: " + messageout + "\n";
+        messageout = "["+nick+"]: " + messageout + " \n";
 
 
         if (buff)
@@ -199,26 +199,44 @@ static void cb_recv ( chat_message cm )
     clearmembers ();
     removector();
     cb_clear ();
+
+    payload = payload + " \n";
+    printrequest(payload);
+
   }
 
-/*if (buff2)
+ else if (command == "REQCHATROOMS")
   {
-    buff2->append ( T.c_str () );
-  }
-  if (disp2)
-  {
-    disp2->show ();
+     payload = payload + " \n";
+    int a = payload.find(';');
+    printrequest(payload);
+
+      //  a = payload.find(' ');
+
   }
 
-  win.show ();*/
 
 }
+
+ void printrequest (std::string payload) {       //prints to chat main window!!!!
+   if (buff)
+      {
+        buff->append ( payload.c_str () );
+      }
+      if (disp)
+      {
+        disp->show ();
+        disp->Fl_Text_Display::move_down();
+      }
+        win.show ();
+     }
 
   void clearmembers ()
   {
     if (buff1)
     {
       buff1->remove (0,  buff1->length () );
+      removector();
     }
     // may need to call show() ?
 
@@ -257,7 +275,7 @@ static void cb_input1 (Fl_Input*, void * userdata)
   // std::memset (msg.body(), 0, msg.body_length());
   // copy over the payload
   //std::memcpy (msg.body(), ( const char *) input1.value (), msg.body_length()-1);
-  
+
   std::string temp = input1.value();
 
   switch(function){
@@ -273,15 +291,11 @@ static void cb_input1 (Fl_Input*, void * userdata)
       msg = format_reply ( "CHANGECHATROOM, " + temp);
     break;
 
-    case 3:
-      msg = format_reply ( "REQCHATROOM, " + temp);
-    break;
-
     case 4:
       msg = format_reply ( "NAMECHATROOM, " + temp);
     break;
   }
-  
+
   //msg = format_reply (temp);
   msg.encode_header();
   std::cout << "sent " << msg.body() << std::endl;
@@ -312,7 +326,7 @@ void updateUsers(void*){
 }
 
 void rqUUID(void*){
-  
+
   chat_message command;
   command = format_reply("REQUUID");
   command.encode_header();
@@ -328,7 +342,13 @@ void function_2(Fl_Widget* w, void* p){
 }
 
 void function_3(Fl_Widget* w, void* p){
-  function = 3;
+    chat_message msg;
+  msg = format_reply ( "REQCHATROOMS");
+  msg.encode_header();
+  c->write(msg);
+  sleep(1);
+
+  function = 0;
 }
 
 void function_4(Fl_Widget* w, void* p){
