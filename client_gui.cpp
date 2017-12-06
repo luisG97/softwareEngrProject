@@ -15,6 +15,8 @@
 #include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Text_Display.H>
 #include <string>
+#include <FL/fl_ask.H>
+#include <FL/Fl_Menu_Bar.H>
 
 Fl_Window win   (600, 500, "SimpleChat");
 Fl_Input input1 (210, 450, 200, 20, "In: ");
@@ -27,10 +29,51 @@ Fl_Text_Display *disp = new Fl_Text_Display (190,50,400,400,"chat");
 Fl_Text_Buffer *buff1 = new Fl_Text_Buffer ();
 Fl_Text_Display *disp1 = new Fl_Text_Display (2,50,180,250,"Chatroom members");
 
-Fl_Return_Button *b_nick = new Fl_Return_Button(10, 330, 170, 25, "NICK");
+//Fl_Return_Button *b_nick = new Fl_Return_Button(10, 330, 170, 25, "NICK");
 Fl_Return_Button *b_change_room = new Fl_Return_Button(10, 365, 170, 25, "CHANGECHATROOM");
-Fl_Return_Button *b_req_room = new Fl_Return_Button(10, 400, 170, 25, "REQCHATROOM");
+Fl_Return_Button *b_req_room = new Fl_Return_Button(10, 400, 170, 25, "REQCHATROOMS");
 Fl_Return_Button *b_name_room = new Fl_Return_Button(10, 435, 170, 25, "NAMECHATROOM");
+
+//creation of a MENUBAR
+Fl_Menu_Bar *menubar;
+
+void NewCB(Fl_Widget* w, void* p) { std::cout << "New..." << std::endl;}
+void OpenCB(Fl_Widget* w, void* p) { std::cout << "Open..." << std::endl;}
+void SaveCB(Fl_Widget* w, void* p) { std::cout << "Save..." << std::endl;}
+void QuitCB(Fl_Widget* w, void* p) {win.hide();}
+void CopyCB(Fl_Widget* w, void* p) {std::cout << "copy..." << std:: endl;}
+void CommandListCB(Fl_Widget* w, void* p) {
+  char const *help = "Uber Chat Help Menu\n\n"
+                      "How to Use:\n\n"
+                      "In order to use, the user has to click on a button at the bottom left corner of the main\n"
+                      "window. once the button is pressed, the user has to type in a response in the input box\n"
+                      "labeled as \"in\". If a button is not pressed, the \"in\" box will treat the input as \n"
+                      "a message to be sent.\n\n"
+                      "Command Definitions:\n\n"
+                      "NICK : Lets you create a nickname to be seen by the other participants in the same chatroom\n"
+                      "CHANGECHATROOM : Lets the user enter a different existing chatroom in the same server\n"
+                      "REQCHATROOMS : Gives you a list of all the currently available chatrooms in the same server\n"
+                      "NAMECHATROOM : Lets the you create a new chatroom with a name give by the user";
+  fl_message(help);
+}
+
+Fl_Menu_Item menuitems[] = {
+	{ "&Window", 0, 0, 0, FL_SUBMENU},
+	  { "&New", FL_ALT + 'n', (Fl_Callback *) NewCB},
+	  { "&Open", FL_ALT + 'o', (Fl_Callback *) OpenCB},
+	  { "&Save", FL_ALT + 's', (Fl_Callback *) SaveCB},
+	  { "&Quit", FL_ALT + 'q', (Fl_Callback *) QuitCB},
+	  { 0 },
+	{ "&Edit", 0, 0, 0, FL_SUBMENU},
+	  { "&Copy", 0, (Fl_Callback *) CopyCB},
+    { 0 },
+  { "&Help", 0, 0, 0, FL_SUBMENU},
+	  { "&Command List", 0, (Fl_Callback *) CommandListCB},
+    { 0 },
+	{ 0 }
+};
+//end of creation of MENUBAR
+
 
 void clearmembers ();
 static void cb_clear ();
@@ -332,6 +375,15 @@ void rqUUID(void*){
   command.encode_header();
   c->write(command);
 }
+void nICK(void*){
+  std::string nickname;
+  nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
+  std::string commANDnick = "NICK," + nickname;
+  chat_message nICK;
+  nICK = format_reply(commANDnick);
+  nICK.encode_header();
+  c->write(nICK);
+}
 
 void function_1(Fl_Widget* w, void* p){
   function = 1;
@@ -361,17 +413,30 @@ void function_5(Fl_Widget* w, void* p){
 
 int main ( int argc, char **argv)
 {
+/*
+std::string nickname;
+nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
+std::string commANDnick = "NICK," + nickname;
+chat_message nICK;
+nICK = format_reply(commANDnick);
+nICK.encode_header();
+c->write(nICK);
+*/
+//routine for NICKNAME ends here
+
+
+
   win.begin ();
   win.add (input1);
 
   Fl::add_timeout(0.5, rqUUID);
+  Fl::add_timeout(1, nICK);
   Fl::add_timeout(1, updateUsers);
   Fl::add_timeout(2, update);
 
-
   input1.callback ((Fl_Callback*)cb_input1,( void *) "Enter next:");
   input1.when ( FL_WHEN_ENTER_KEY );
-  b_nick -> callback((Fl_Callback *) function_1, 0);
+ // b_nick -> callback((Fl_Callback *) function_1, 0);
   b_change_room -> callback((Fl_Callback *) function_2, 0);
   b_req_room -> callback((Fl_Callback *) function_3, 0);
   b_name_room -> callback((Fl_Callback *) function_4, 0);
@@ -380,8 +445,15 @@ int main ( int argc, char **argv)
   win.add (quit);
   disp->buffer(buff);
   disp1->buffer(buff1);
-
-    // disp2->buffer(buff2);
+  //MENUBAR
+  const int x = 160;
+  menubar = new Fl_Menu_Bar(0, 0, x, 25);
+  menubar->menu(menuitems);
+  //
+  //enables resizing of window
+  win.resizable(win);
+  //end of window resizing
+  // disp2->buffer(buff2);
   win.end ();
   win.show ();
 
