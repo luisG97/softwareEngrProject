@@ -18,13 +18,16 @@
 #include <FL/fl_ask.H>
 #include <FL/Fl_Menu_Bar.H>
 
-Fl_Window win   (600, 500, "SimpleChat");
+Fl_Window win   (600, 500, "UberChat");
 Fl_Input input1 (210, 450, 200, 20, "In: ");
 Fl_Button quit  (410, 450, 50,20,"Quit");
 Fl_Button clear (470, 450, 50,20,"Clear");
 
 Fl_Text_Buffer *buff = new Fl_Text_Buffer ();
 Fl_Text_Display *disp = new Fl_Text_Display (190,50,400,400,"chat");
+
+Fl_Text_Buffer *buff2 = new Fl_Text_Buffer ();
+Fl_Text_Display *disp2 = new Fl_Text_Display (250,0,100,30,"Current Chatroom");
 
 Fl_Text_Buffer *buff1 = new Fl_Text_Buffer ();
 Fl_Text_Display *disp1 = new Fl_Text_Display (2,50,180,250,"Chatroom members");
@@ -375,6 +378,14 @@ void rqUUID(void*){
   command.encode_header();
   c->write(command);
 }
+
+void dispRoom(void*){
+  chat_message dispROOM;
+  dispROOM = format_reply ( "REQCHATROOM");
+  dispROOM.encode_header();
+  c->write(dispROOM);
+
+}
 void nICK(void*){
   std::string nickname;
   nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
@@ -413,19 +424,6 @@ void function_5(Fl_Widget* w, void* p){
 
 int main ( int argc, char **argv)
 {
-/*
-std::string nickname;
-nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
-std::string commANDnick = "NICK," + nickname;
-chat_message nICK;
-nICK = format_reply(commANDnick);
-nICK.encode_header();
-c->write(nICK);
-*/
-//routine for NICKNAME ends here
-
-
-
   win.begin ();
   win.add (input1);
 
@@ -433,6 +431,7 @@ c->write(nICK);
   Fl::add_timeout(1, nICK);
   Fl::add_timeout(1, updateUsers);
   Fl::add_timeout(2, update);
+
 
   input1.callback ((Fl_Callback*)cb_input1,( void *) "Enter next:");
   input1.when ( FL_WHEN_ENTER_KEY );
@@ -445,6 +444,8 @@ c->write(nICK);
   win.add (quit);
   disp->buffer(buff);
   disp1->buffer(buff1);
+  //Display for CURRENTROOM
+  disp2->buffer(buff2);
   //MENUBAR
   const int x = 160;
   menubar = new Fl_Menu_Bar(0, 0, x, 25);
@@ -453,7 +454,6 @@ c->write(nICK);
   //enables resizing of window
   win.resizable(win);
   //end of window resizing
-  // disp2->buffer(buff2);
   win.end ();
   win.show ();
 
