@@ -27,7 +27,7 @@ Fl_Text_Buffer *buff = new Fl_Text_Buffer ();
 Fl_Text_Display *disp = new Fl_Text_Display (190,50,400,400,"chat");
 
 Fl_Text_Buffer *buff2 = new Fl_Text_Buffer ();
-Fl_Text_Display *disp2 = new Fl_Text_Display (250,0,100,30,"Current Chatroom");
+Fl_Text_Display *disp2 = new Fl_Text_Display (200,0,200,30,"Current Chatroom");
 
 Fl_Text_Buffer *buff1 = new Fl_Text_Buffer ();
 Fl_Text_Display *disp1 = new Fl_Text_Display (2,50,180,250,"Chatroom members");
@@ -40,11 +40,7 @@ Fl_Return_Button *b_name_room = new Fl_Return_Button(10, 435, 170, 25, "NAMECHAT
 //creation of a MENUBAR
 Fl_Menu_Bar *menubar;
 
-void NewCB(Fl_Widget* w, void* p) { std::cout << "New..." << std::endl;}
-void OpenCB(Fl_Widget* w, void* p) { std::cout << "Open..." << std::endl;}
-void SaveCB(Fl_Widget* w, void* p) { std::cout << "Save..." << std::endl;}
 void QuitCB(Fl_Widget* w, void* p) {win.hide();}
-void CopyCB(Fl_Widget* w, void* p) {std::cout << "copy..." << std:: endl;}
 void CommandListCB(Fl_Widget* w, void* p) {
   char const *help = "Uber Chat Help Menu\n\n"
                       "How to Use:\n\n"
@@ -62,14 +58,9 @@ void CommandListCB(Fl_Widget* w, void* p) {
 
 Fl_Menu_Item menuitems[] = {
 	{ "&Window", 0, 0, 0, FL_SUBMENU},
-	  { "&New", FL_ALT + 'n', (Fl_Callback *) NewCB},
-	  { "&Open", FL_ALT + 'o', (Fl_Callback *) OpenCB},
-	  { "&Save", FL_ALT + 's', (Fl_Callback *) SaveCB},
+
 	  { "&Quit", FL_ALT + 'q', (Fl_Callback *) QuitCB},
 	  { 0 },
-	{ "&Edit", 0, 0, 0, FL_SUBMENU},
-	  { "&Copy", 0, (Fl_Callback *) CopyCB},
-    { 0 },
   { "&Help", 0, 0, 0, FL_SUBMENU},
 	  { "&Command List", 0, (Fl_Callback *) CommandListCB},
     { 0 },
@@ -84,9 +75,6 @@ static void room_clear();
 void printrequest (std::string payload);
 void dispRoom();
 int function = 0;
-/*Fl_Text_Buffer *buff2 = new Fl_Text_Buffer ();
-Fl_Text_Display *disp2 = new Fl_Text_Display (2,10,100,35);*/
-
 // boost asio instances
 chat_client *c = NULL;
 std::thread *t = NULL;
@@ -111,22 +99,13 @@ std::vector< std::vector<std::string> >uuidnames; // hold uuid and names
     {
       for (int j=0; j < uuidnames.size()&&  found; j++)
       {
-        //std::cout<< "outter------------->>>>>>>>>>>>"<<uuidnames.size()<<std::endl;
-        //std::cout<< "outter-------------counter>>>>>>>>>>>>"<<j<<std::endl;
-        //std::cout<< "array------------->>>>>>>>>>>>"<<uuidnames[i][0]<<std::endl;
-        //std::cout<< "outter id------------->>>>>>>>>>>>"<<id<<std::endl;
         if(uuidnames[i][0]==id)
         {
           ans = uuidnames[i][1];
-          //std::cout<< "INNER------------->>>>>>>>>>>>"<< ans<<std::endl;
           found = false;
-          //std::cout<< "INNER-----if-------->>>>out>>"<< ans<<std::endl;
         }
-        //std::cout<< "outer--------if----->>>>out>>"<< ans<<std::endl;
       }
-      //std::cout<< "outter------------->>>>out>>"<< ans<<std::endl;
     }
-    //std::cout<< "outter-----result-------->>>>out>>"<< ans<<std::endl;
     return ans;
   }
 
@@ -212,15 +191,11 @@ static void cb_recv ( chat_message cm )
       {
         ANS = content.find(' ');
         std::string uuid = content.substr(0,ANS);
-        //std::cout<< "REqtext------------->>>>>>>>>>>>"<< uuid<<std::endl;
         std::string nick= getname(uuid);
-        // = getname(uuid);
-        //std::cout<< "REqtext------------->>>>>>>>>>>>"<< nick<<std::endl;
         content.erase(0,ANS+1);
         ANS = 0;
         ANS = content.find(';');
         std::string messageout=content.substr(0,ANS);
-        //std::cout<< "REqtext------------->>>>>>>>>>>>"<< messageout<<std::endl;
         content.erase(0,ANS+1);
         messageout = "["+nick+"]: " + messageout + " \n";
 
@@ -342,10 +317,6 @@ static void cb_input1 (Fl_Input*, void * userdata)
 {
   chat_message msg;
   msg.body_length(std::strlen( ( const char *) input1.value ()) + 1);
-  // ensure it is null terminated
-  // std::memset (msg.body(), 0, msg.body_length());
-  // copy over the payload
-  //std::memcpy (msg.body(), ( const char *) input1.value (), msg.body_length()-1);
 
   std::string temp = input1.value();
 
@@ -366,12 +337,9 @@ static void cb_input1 (Fl_Input*, void * userdata)
       msg = format_reply ( "NAMECHATROOM, " + temp);
     break;
   }
-
-  //msg = format_reply (temp);
   msg.encode_header();
   std::cout << "sent " << msg.body() << std::endl;
   c->write(msg);
-  //std::memset ( input1.value() , 0, sizeof ( input1.value() ));
   function = 0;
   sleep (1);
 }
@@ -405,7 +373,14 @@ void rqUUID(void*){
 }
 void nICK(void*){
   std::string nickname;
+  int found;
+  do{
   nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
+  found = nickname.find_first_of(".,/\\-=][-_~");
+  if(found != -1)
+  {fl_message("Nicknames with delimiter characters are not accepted\n"
+              "Please, type in a different nickname");}
+  }while(found != -1);
   std::string commANDnick = "NICK," + nickname;
   chat_message nICK;
   nICK = format_reply(commANDnick);
@@ -458,7 +433,6 @@ int main ( int argc, char **argv)
   Fl::add_timeout(1, showRoom);
   input1.callback ((Fl_Callback*)cb_input1,( void *) "Enter next:");
   input1.when ( FL_WHEN_ENTER_KEY );
- // b_nick -> callback((Fl_Callback *) function_1, 0);
   b_change_room -> callback((Fl_Callback *) function_2, 0);
   b_req_room -> callback((Fl_Callback *) function_3, 0);
   b_name_room -> callback((Fl_Callback *) function_4, 0);
