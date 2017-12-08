@@ -80,7 +80,9 @@ Fl_Menu_Item menuitems[] = {
 
 void clearmembers ();
 static void cb_clear ();
+static void room_clear();
 void printrequest (std::string payload);
+void dispRoom();
 int function = 0;
 /*Fl_Text_Buffer *buff2 = new Fl_Text_Buffer ();
 Fl_Text_Display *disp2 = new Fl_Text_Display (2,10,100,35);*/
@@ -238,6 +240,17 @@ static void cb_recv ( chat_message cm )
         ANS = content.find('-');
       }
     }
+    else if (command == "REQCHATROOM"){
+      if (buff2)
+      {
+        buff2->append (payload.c_str ());
+      }
+      if (disp2)
+      {
+        disp2->show ();
+      }
+      win.show ();
+    }
 
 
   else if (command == "CHANGECHATROOM")
@@ -245,9 +258,16 @@ static void cb_recv ( chat_message cm )
     clearmembers ();
     removector();
     cb_clear ();
+    room_clear();
 
     payload = payload + " \n";
     printrequest(payload);
+
+    std::string comm = "REQCHATROOM";
+    chat_message wins;
+    wins = format_reply(comm);
+    wins.encode_header();
+    c->write(wins);
 
   }
 
@@ -256,9 +276,6 @@ static void cb_recv ( chat_message cm )
      payload = payload + " \n";
     int a = payload.find(';');
     printrequest(payload);
-
-      //  a = payload.find(' ');
-
   }
 
 
@@ -296,6 +313,14 @@ static void cb_recv ( chat_message cm )
     }
     // may need to call show() ?
 
+  }
+
+  static void room_clear()
+  {
+    if (buff2)
+    {
+      buff2->remove (0, buff2->length());
+    }
   }
 
 static void cb_quit ( )
@@ -378,14 +403,6 @@ void rqUUID(void*){
   command.encode_header();
   c->write(command);
 }
-
-void dispRoom(void*){
-  chat_message dispROOM;
-  dispROOM = format_reply ( "REQCHATROOM");
-  dispROOM.encode_header();
-  c->write(dispROOM);
-
-}
 void nICK(void*){
   std::string nickname;
   nickname = fl_input("Welcome!\n Please type in a Nickname:", "NICK HERE");
@@ -394,6 +411,13 @@ void nICK(void*){
   nICK = format_reply(commANDnick);
   nICK.encode_header();
   c->write(nICK);
+}
+void showRoom(void*){
+  std::string comm = "REQCHATROOM";
+  chat_message win;
+  win = format_reply(comm);
+  win.encode_header();
+  c->write(win);
 }
 
 void function_1(Fl_Widget* w, void* p){
@@ -431,8 +455,7 @@ int main ( int argc, char **argv)
   Fl::add_timeout(1, nICK);
   Fl::add_timeout(1, updateUsers);
   Fl::add_timeout(2, update);
-
-
+  Fl::add_timeout(1, showRoom);
   input1.callback ((Fl_Callback*)cb_input1,( void *) "Enter next:");
   input1.when ( FL_WHEN_ENTER_KEY );
  // b_nick -> callback((Fl_Callback *) function_1, 0);
@@ -444,7 +467,6 @@ int main ( int argc, char **argv)
   win.add (quit);
   disp->buffer(buff);
   disp1->buffer(buff1);
-  //Display for CURRENTROOM
   disp2->buffer(buff2);
   //MENUBAR
   const int x = 160;
